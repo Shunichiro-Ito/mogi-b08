@@ -45,6 +45,7 @@
       <!--<p class="time">{hour}時{minute}分{second}秒</p>-->
     <h1>違反者位置情報</h1>
     <p>aa</p>
+    <p>bb</p>
     <footer>違反者取締アプリ~BlueNetwork~</footer>
   
   
