@@ -44,6 +44,7 @@
       <p class="date">現在時刻 : {year}年{month}/{day}日({week_ja[week]}) {hour}時{minute}分{second}秒</p>
       <!--<p class="time">{hour}時{minute}分{second}秒</p>-->
     <h1>違反者位置情報</h1>
+    <p>aa</p>
     <footer>違反者取締アプリ~BlueNetwork~</footer>
   
   
