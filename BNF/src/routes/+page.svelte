@@ -1,96 +1,99 @@
 <script>
+  import { onMount } from 'svelte';
+  import Screen1 from './Screen1.svelte';
+  import Screen2 from './Screen2.svelte';
 
-    import { onMount, beforeUpdate } from 'svelte';
+  // 今日の日付データを変数に格納
+  let today = new Date();
+  // 年・月・日・曜日を取得
+  let year = today.getFullYear();
+  let month = today.getMonth() + 1;
+  let week = today.getDay();
+  let day = today.getDate();
+  let week_ja = ["日", "月", "火", "水", "木", "金", "土"];
 
-    //今日の日付データを変数に格納
-    //変数は"today"とする
-    let today=new Date(); 
+  // 時・分・秒を取得
+  let hour;
+  let minute;
+  let second;
 
-    //年・月・日・曜日を取得
-    let year = today.getFullYear();
-    let month = today.getMonth()+1;
-    let week = today.getDay();
-    let day = today.getDate();
+  onMount(() => {
+      function showclock() {
+          let nowtime = new Date();
+          hour = nowtime.getHours();
+          minute = nowtime.getMinutes();
+          second = nowtime.getSeconds();
+      }
+      showclock();
+      setInterval(showclock, 1000);
+  });
 
-    let week_ja= new Array("日","月","火","水","木","金","土");
+  // 現在表示している画面を管理する変数
+  let currentScreen = 1;
 
-    //年・月・日・曜日を書き出す
-   //document.write(year+"年"+month+"月"+day+"日 "+week_ja[week]+"曜日");
+  // 画面を切り替える関数
+  function switchScreen(screen) {
+      currentScreen = screen;
+  }
+</script>
 
-   //変数は"time"とする
-    //let time= new Date();
+<header><p class="blue">BlueNetwork</p></header>
 
-    //時・分・秒を取得
-    let hour;
-    let minute;
-    let second;
-    onMount(async () => {
+<p class="date">現在時刻 : {year}年{month}/{day}日({week_ja[week]}) {hour}時{minute}分{second}秒</p>
 
-    function showclock(){
-      let nowtime=new Date(); 
-      hour = nowtime.getHours();
-      minute = nowtime.getMinutes();
-      second = nowtime.getSeconds();
+{#if currentScreen === 1}
+  <Screen1 />
+{:else}
+  <Screen2 />
+{/if}
 
-    }
-    showclock();
-    setInterval(showclock,1000);
-    })
-  //document.write(hour+"時",+minute+"分"+second+"秒");
-  </script>
-  
-   
-    <header><p class="blue">BlueNetwork</p></header>
-      <p class="date">現在時刻 : {year}年{month}/{day}日({week_ja[week]}) {hour}時{minute}分{second}秒</p>
-      <!--<p class="time">{hour}時{minute}分{second}秒</p>-->
-    <h1>違反者位置情報</h1>
-    <p>aa</p>
-    <p>bb</p>
-    <p>cc</p>
-    <footer>違反者取締アプリ~BlueNetwork~</footer>
-  
-  
-  <style>
-    header {
-      height:10%;
+<footer>
+  違反者取締アプリ~BlueNetwork~
+  <br/>
+  <button on:click={() => switchScreen(1)}>ライブ映像</button>
+  <button on:click={() => switchScreen(2)}>違反記録</button>
+</footer>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+  header {
+      height: 5%;
       align-items: center;
       background: linear-gradient(to right, blue, pink);
       margin-bottom: 0;
-    }
+  }
 
-    h1 {
-      text-align: center;
-      border-bottom: solid 3px;
-      border-left:solid 3px;
-      border-right:solid 3px;
-      margin-top: 0;
-      margin-bottom: 0;
-    }
-
-    .blue {
-      text-align: center;
-      font-family: "Poetsen One", sans-serif;
-      font-weight: 400;
+  .blue {
+      text-align: left;
+      font-family: "Robot", sans-serif;
+      font-weight: 500;
       font-style: normal;
-    }
+      font-size: 30pt;
+      color: white;
+  }
 
-    .date {
+  .date {
       text-align: center;
       border: solid 3px;
       margin-top: 0;
       margin-bottom: 0;
       padding: 1%;
-    }
+  }
 
-   footer{
-    text-align: center;
-    background-color: blue;
-    height:10%;
-    font-family: "Poetsen One", sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    color: aliceblue;
+  footer {
+      text-align: center;
+      background-color: navy;
+      height: 7%;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 400;
+      font-style: normal;
+      color: aliceblue;
+  }
 
-   }
-  
-  </style>
+  button {
+      margin: 0 5px;
+      padding: 5px 10px;
+      font-size: 1em;
+  }
+</style>
