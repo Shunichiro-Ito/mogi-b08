@@ -1,0 +1,6 @@
+CREATE TABLE violations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cam_no INTEGER,
+    date INTEGER,
+    violator TEXT
+);
