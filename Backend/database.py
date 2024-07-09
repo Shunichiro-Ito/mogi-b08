@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # データベースのURLを設定
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test2.db"  # SQLiteを使用する例
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"  # SQLiteを使用する例
 
 # データベースエンジンの作成
 engine = create_engine(

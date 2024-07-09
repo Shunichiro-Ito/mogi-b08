@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect, Response
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect
+from fastapi.responses import  StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from database import engine, SessionLocal
 import models, schemas
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,10 +10,12 @@ import random
 from typing import List
 import asyncio
 import cv2
+from datetime import datetime
+from yolov8 import generate_frames_yolo
 
-# データベース変更フラグ
-data_change_flag = False
 
+# 最終変更タイムスタンプ
+last_modified = None
 
 app = FastAPI()
 # データベース作成
@@ -40,6 +43,11 @@ def get_db():
     finally:
         db.close()
 
+
+def get_last_modified_timestamp(db: Session):
+    return db.query(func.max(models.Violator.last_modified)).scalar()
+
+
 ############################ WebSocket #####################################
 # WebSocket接続用のセット
 class ConnectionManager:
@@ -61,18 +69,26 @@ manager = ConnectionManager()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    global data_change_flag
+    global last_modified
     await manager.connect(websocket)
     try:
         while True:
             # 一応待機
             await asyncio.sleep(1)
-            # データベース変更時処理
-            if data_change_flag:
-                # フロントにメッセージ送信
-                message = "Data Changed"
-                data_change_flag = False
-                await manager.send_message(message)
+
+            try:
+                # データベース要素数確認
+                db = SessionLocal()
+                new_last_modified = db.query(func.max(models.Violator.last_modified)).scalar()
+
+                # データベース変更時処理
+                if last_modified != new_last_modified:
+                    # フロントにメッセージ送信
+                    message = "Data Changed"
+                    last_modified = new_last_modified
+                    await manager.send_message(message)
+            finally:
+                db.close()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
@@ -87,7 +103,6 @@ async def read_violations(db: Session = Depends(get_db)):
 # ダミーデータの作成
 @app.post("/generate_dummy_data/")
 def generate_dummy_data(db: Session = Depends(get_db)):
-    global data_change_flag
     violations = ['傘差し運転', '二人乗り', 'スマホ運転']
 
     # テストとして1つだけ追加
@@ -103,29 +118,28 @@ def generate_dummy_data(db: Session = Depends(get_db)):
             image = image_file.read()
             binary_image = base64.b64encode(image)
         
-        db_violation = models.Violator(cam_no=cam_no, date=date, violation=violation, image=binary_image)
+        db_violation = models.Violator(cam_no=cam_no, date=date, violation=violation, image=binary_image, last_modified=datetime.now())
         db.add(db_violation)
         db.commit()
         db.refresh(db_violation)
-    data_change_flag = True
     return {"message": "Dummy data generated"}
 
 # ダミーデータの削除
 @app.delete("/delete_dummy_data/")
-def delete_dummy_data(db: Session = Depends(get_db)):
-    global data_change_flag
-    
+def delete_dummy_data(db: Session = Depends(get_db)): 
     db.query(models.Violator).delete()
     db.commit()
-    data_change_flag = True
     return {"message": "Dummy data deleted"}
 
 ################################ カメラ映像ストリーミング #####################################
 
 async def generate_frames():
-    camera1 = cv2.VideoCapture(0)
-    camera2 = cv2.VideoCapture(1)
+    #camera1 = cv2.VideoCapture(0)
+    #camera2 = cv2.VideoCapture(1)
     
+    camera1 = cv2.VideoCapture('D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/resource/test_two_people1.mp4')
+    camera2 = cv2.VideoCapture('D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/resource/test_two_people1.mp4')
+
     while True:
         success1, frame1 = camera1.read()
         success2, frame2 = camera2.read()
@@ -145,7 +159,14 @@ async def generate_frames():
 
 @app.get("/video_feed")
 async def video_feed():
+    print('****************video************************')
     return StreamingResponse(generate_frames(), media_type='multipart/x-mixed-replace; boundary=frame')    
+
+@app.get("/video_feed_yolo")
+async def video_feed_yolo():
+    print('****************yolo************************')
+    return StreamingResponse(generate_frames_yolo(), media_type='multipart/x-mixed-replace; boundary=frame')
+
 
 if __name__ == "__main__":
     import uvicorn
