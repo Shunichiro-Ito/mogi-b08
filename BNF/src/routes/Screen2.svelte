@@ -1,7 +1,7 @@
 <script>
-  import { onMount } from 'svelte';
-
-  let violations = [];
+    import { onMount } from 'svelte';
+  
+    let violations = [];
   
     // 全データ取得  
     const fetchViolations = async () => {
@@ -17,7 +17,7 @@
       });
   
       if (response.ok) {
-        // fetchViolations();
+        fetchViolations();
       } else {
         console.error('Failed to generate dummy data');
       }
@@ -30,7 +30,7 @@
       });
 
       if (response.ok) {
-        // fetchViolations();
+        fetchViolations();
       } else {
         console.error('Failed to delete dummy data');
       }
@@ -47,8 +47,6 @@
       fetchViolations();
     };
 
-    
-
     onMount(() => {
       ws.onopen = () => {
         console.log('WebSocket connected');
@@ -61,43 +59,48 @@
       ws.onerror = error => {
         console.error('WebSocket error:', error);
       };
-    });
 
- 
+      fetchViolations(); // ページロード時にデータを取得
+    });
 </script>
 
-<h1>違反者データベース</h1>
-<p>データベース表示</p>
-
 <main>
-    <h1>Violation List</h1>
+    <h1>違反者データベース</h1>
     <div>
-      <button on:click="{generateDummyData}">Add Dummy Data</button>
-      <button on:click="{deleteDummyData}">Delete Dummy Data</button>
+      <button on:click="{generateDummyData}">ダミーデータ追加</button>
+      <button on:click="{deleteDummyData}">ダミーデータ削除</button>
     </div>
-    <h2>Violations List:</h2>
-    <ul>
-      {#each violations as violation}
-        <li>
-          <p>Camera No: {violation.cam_no}</p>
-          <p>Date: {violation.date}</p>
-          <p>Violator: {violation.violation}</p>
-          {#if violation.image}
-            <img src={`data:image/png;base64,${violation.image}`} alt="" />
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  </main>
-
-
+    <table>
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>カメラ番号</th>
+          <th>違反内容</th>
+          <th>写真</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each violations as violation}
+          <tr>
+            <td>{violation.date}</td>
+            <td>{violation.cam_no}</td>
+            <td>{violation.violation}</td>
+            <td>
+              {#if violation.image}
+                <img src={`data:image/png;base64,${violation.image}`} alt="Violation Image" />
+              {/if}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+</main>
 
 <style>
     h1 {
       text-align: center;
+      font-family: 'Noto Serif JP', serif;
       border-bottom: solid 3px;
-      border-left: solid 3px;
-      border-right: solid 3px;
       margin-top: 0;
       margin-bottom: 0;
     }
@@ -105,10 +108,26 @@
     main {
       text-align: center;
       margin: 0 auto;
-      max-width: 600px;
+      max-width: 800px;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
     img {
-      max-width: 100%;
+      max-width: 100px;
       height: auto;
     }
 </style>
