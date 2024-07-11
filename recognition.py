@@ -10,8 +10,8 @@ model = YOLO('yolov8n.pt')
 
 # ビデオキャプチャの設定（0はデフォルトカメラ, './YOLO/傘3.mp4'は動画, 'http://blue-network.eolstudy.com/cam-window'はストリーミング配信のURL）
 #cap = cv2.VideoCapture(0)
-#cap = cv2.VideoCapture('傘3.mp4')
-cap = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-window')
+cap = cv2.VideoCapture('傘3.mp4')
+#cap = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-window')
 
 frame_skip = 4  # フレームをスキップする間隔
 frame_count = 0
@@ -32,7 +32,7 @@ while cap.isOpened():
       continue
 
    # YOLOv8で推論を実行
-   results = model(frame)
+   results = model.track(frame)
    
    bike_S=[]
    umb_S=[]
@@ -58,11 +58,13 @@ while cap.isOpened():
             X1, Y1, X2, Y2 = map(int,j)
             cv2.rectangle(frame_plot, (min(x1,X1), min(y1,Y1)), (max(x2,X2), max(y2,Y2)), (0, 0, 255), 2)
             cv2.putText(frame_plot, "bike", (min(x1,X1), min(y1,Y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            #インターバルとして設定した時間以上たっていたら画像を保存
             if(time.time()-previous_time>=interval):
                cropped_frame = frame[min(y1, Y1):max(y2, Y2), min(x1, X1):max(x2, X2)]
                cropped_output_path = os.path.join(output_dir, f'cropped_frame_{frame_count}.jpg')
                cv2.imwrite(cropped_output_path, cropped_frame)
                hozon=True
+   #画像を保存したら、現在の時間からインターバルを設ける
    if(hozon):
       previous_time=time.time()
       hozon=False
