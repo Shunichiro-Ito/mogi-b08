@@ -51,7 +51,7 @@
     /******************** Streaming  *******************************/
     function startStream() {
         const img = document.createElement('img');
-        img.src = "http://localhost:8000/video_feed";
+        img.src = "http://localhost:8000/video_feed_yolo";
         img.alt = "Video Stream";
         img.style.width = "100%";
         img.style.height = "auto";
@@ -92,6 +92,7 @@
           <p>Camera No: {violation.cam_no}</p>
           <p>Date: {violation.date}</p>
           <p>Violator: {violation.violation}</p>
+          <p>Tracking ID: {violation.tracking_id}</p>
           {#if violation.image}
             <img src={`data:image/png;base64,${violation.image}`} alt="" />
           {/if}
@@ -109,7 +110,7 @@
       max-width: 600px;
     }
     img {
-      max-width: 100%;
+      max-width: 50%;
       height: auto;
     }
     #videoContainer {

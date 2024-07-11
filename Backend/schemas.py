@@ -1,12 +1,14 @@
 from pydantic import BaseModel
-from typing import Optional
+from datetime import datetime
 
 # よくわかんないけど必要
 class ViolatorBase(BaseModel):
-    cam_no: int
+    cam_no: str
     date: str
     violation: str
     image: bytes
+    last_modified: datetime
+    tracking_id: str
 
 class ViolatorCreate(ViolatorBase):
     pass

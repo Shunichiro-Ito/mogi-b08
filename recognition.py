@@ -36,7 +36,7 @@ while cap.isOpened():
    
    bike_S=[]
    umb_S=[]
-   # 検出結果をフレームに描画
+   # 傘と自転車の位置を保存
    for box in results[0].boxes:
       class_id = int(box.cls[0])
       if(results[0].names[class_id]=="bicycle"):
@@ -50,6 +50,7 @@ while cap.isOpened():
          #cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 0), 2)
          #cv2.putText(frame, "umb", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
+   #傘と自転車が横から見て重なっていたらまとめて描画
    for i in umb_S:
       for j in bike_S:
          if(i[0]<j[2] and j[0]<i[2] and 3*min(j[2]-i[0],i[2]-j[0])>i[2]-i[0]):
