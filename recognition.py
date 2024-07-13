@@ -10,7 +10,9 @@ model = YOLO('yolov8n.pt')
 
 # ビデオキャプチャの設定（0はデフォルトカメラ, './YOLO/傘3.mp4'は動画, 'http://blue-network.eolstudy.com/cam-window'はストリーミング配信のURL）
 #cap = cv2.VideoCapture(0)
-cap = cv2.VideoCapture('傘3.mp4')
+script_path = os.path.abspath(__file__)
+script_dir = os.path.dirname(script_path)
+cap = cv2.VideoCapture(script_dir + '/' + 'umb_1.mp4')
 #cap = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-window')
 
 frame_skip = 4  # フレームをスキップする間隔
@@ -61,7 +63,7 @@ while cap.isOpened():
             #インターバルとして設定した時間以上たっていたら画像を保存
             if(time.time()-previous_time>=interval):
                cropped_frame = frame[min(y1, Y1):max(y2, Y2), min(x1, X1):max(x2, X2)]
-               cropped_output_path = os.path.join(output_dir, f'cropped_frame_{frame_count}.jpg')
+               cropped_output_path = os.path.join(script_dir + '/' + output_dir, f'cropped_frame_{frame_count}.jpg')
                cv2.imwrite(cropped_output_path, cropped_frame)
                hozon=True
    #画像を保存したら、現在の時間からインターバルを設ける
@@ -72,8 +74,8 @@ while cap.isOpened():
    
 
     # フレームを表示
-   cv2.imshow('YOLOv8 Real-Time Detection', frame_plot)
-
+   #cv2.imshow('YOLOv8 Real-Time Detection', frame_plot)
+   cv2.imshow('YOLOv8 Real-Time Detection', results[0].plot())
     # 'q' キーで終了
    if cv2.waitKey(1) & 0xFF == ord('q'):
         break

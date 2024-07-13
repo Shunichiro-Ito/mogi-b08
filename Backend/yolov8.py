@@ -12,6 +12,12 @@ from tracker import MultiObjectTracker
 # 時間
 import time
 
+prev_time = [time.time(), time.time()]
+save_flag = [True, True]
+tracking_id = 0
+frame_count = 0
+skip_frame = 4
+
 def reg_database(cam_no, violation_name, image_path, tracking_id):
     try:
         # データベース接続
@@ -46,37 +52,31 @@ def add_cam_no_database(cam_no, _track_id):
             else:
                 print(f'{_track_id} in {v.tracking_id}')
 
-
         else:
             print('*********************  同一データ発見失敗  *********************')
             print(_track_id)
     finally:
         db.close()
 
-
-
 def process_frame(frame, model, cam_index, tracker):
     """
     YOLOv8でフレームを処理し、認識結果を描画する関数
     """
+    global prev_time
+    global save_flag
+    global tracking_id
     results = model.track(frame)
     annotated_frame = results[0].plot()
 
-    #-----------------伊藤の部分はじまり-----------------------
     frame_skip = 4  # フレームをスキップする間隔
     frame_count = 0
-    interval=5.0  #撮影を行う間隔(多分秒)
-
-    output_dir = 'output'
-    previous_time=time.time()-interval 
-    hozon=True
-    frame_plot=frame
-    bike_S=[]
-    umb_S=[]
-    #-----------------伊藤の部分おわり-------------------------
+    interval=5.0  #撮影を行う間隔[秒]
+     
+    frame_plot = frame
+    bike_S = []
+    umb_S = []
 
     for box in results[0].boxes:
-        #-----------------伊藤の部分はじまり-----------------------
         #傘と自転車の情報を保存
         class_id = int(box.cls[0])
         if(results[0].names[class_id]=="bicycle"):
@@ -85,75 +85,72 @@ def process_frame(frame, model, cam_index, tracker):
         elif(results[0].names[class_id]=="umbrella"):
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             umb_S.append([x1,y1,x2,y2])
-        #-----------------伊藤の部分おわり-------------------------
-
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        class_id = int(box.cls[0])  # cls をテンソルから整数に変換
-
-        if box.id  is not None:
-            # トラッキングIDの取得
-            track_id = int(box.id[0])
-            # カメラ間追跡タスク
-            # 人間なら(実装完了後違反ならに変更)
-            if results[0].names[class_id] == 'person':
-                ret_result, ret_track_id, ret_box, ret_value, ret_added = tracker(frame, box.xyxy[0], f'{cam_index}-{track_id}')
-
-                # トラッキング結果
-                if ret_added:
-                    print("*********************  新規人間 *******************************")
-                    script_path = os.path.abspath(__file__)
-                    script_dir = os.path.dirname(script_path)
-
-                    # 画像を切り取る
-                    cropped_image = frame[y1:y2, x1:x2]
-
-                    # 切り取った画像を保存
-                    cv2.imwrite(script_dir + "/images/temp.png", cropped_image)
-                    
-                    reg_database(cam_index, '傘差し運転', script_dir + "/images/temp.png", ret_track_id)
-
-                
-                if ret_result and cam_index != int(ret_track_id.split('-')[0]):
-                    # トラッキング成功(他のカメラの情報と一致するものが見つかった)
-                    # データベースのカメラnoを書き換え
-                    print("*********************  トラッキング成功  *********************")
-                    add_cam_no_database(cam_index, ret_track_id)
-    
-    #-----------------伊藤の部分はじまり-----------------------
+     
     #傘と自転車が横から見て重なっていたらまとめて描画
     for i in umb_S:
         for j in bike_S:
-            if(i[0]<j[2] and j[0]<i[2] and 3*min(j[2]-i[0],i[2]-j[0])>i[2]-i[0]):
+            if(i[0] < j[2] and j[0] < i[2] and 3 * min(j[2]-i[0],i[2]-j[0]) > i[2]-i[0]):
                 x1, y1, x2, y2 = map(int,i)
                 X1, Y1, X2, Y2 = map(int,j)
                 cv2.rectangle(frame_plot, (min(x1,X1), min(y1,Y1)), (max(x2,X2), max(y2,Y2)), (0, 0, 255), 2)
                 cv2.putText(frame_plot, "bike", (min(x1,X1), min(y1,Y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                if(time.time()-previous_time>=interval):
-                    cropped_frame = frame[min(y1, Y1):max(y2, Y2), min(x1, X1):max(x2, X2)]
-                    cropped_output_path = os.path.join(output_dir, f'cropped_frame_{frame_count}.jpg')
-                    script_path = os.path.abspath(__file__)
-                    script_dir = os.path.dirname(script_path)
-                    cv2.imwrite(script_dir + "/images/temp.png", cropped_frame)
-                    #データベースへの保存先がわからなかった...
-                    #reg_database(cam_index, '傘差し運転', script_dir + "/images/temp.png", ret_track_id)
-                    hozon=True
-    if(hozon):
-        previous_time=time.time()
-        hozon=False
-    #-----------------伊藤の部分おわり-------------------------
+                if(time.time() - prev_time[cam_index - 1] >= interval):
+                    print(f'*********************カメラ{cam_index}  傘差し運転発見 *******************************')
+
+                    # ここが保存処理、つまりカメラ間にて同じ人がいるかを調べたい部分
+                    xyxy = [min(x1, X1), min(y1, Y1), max(x2, X2), max(y2, Y2)]
+                    ret_result, ret_track_id, ret_box, ret_value, ret_added = tracker(frame, xyxy, f'{cam_index}-{tracking_id}')
+                    if ret_added:
+                        print("*********************  新規人間 *******************************")
+
+                        cropped_frame = frame[min(y1, Y1):max(y2, Y2), min(x1, X1):max(x2, X2)]
+                        script_path = os.path.abspath(__file__)
+                        script_dir = os.path.dirname(script_path)
+                        cv2.imwrite(script_dir + "/images/temp.png", cropped_frame)
+                        reg_database(cam_index, '傘差し運転', script_dir + "/images/temp.png", ret_track_id)
+                        tracking_id = tracking_id + 1
+                        
+                    elif ret_result and cam_index != int(ret_track_id.split('-')[0]):
+                        # トラッキング成功(他のカメラの情報と一致するものが見つかった)
+                        # データベースのカメラnoを書き換え
+                        print("*********************  トラッキング成功  *********************")
+                        add_cam_no_database(cam_index, ret_track_id)
+                    
+                    elif ret_result:
+                        print("*********************  同一カメラ同一人物  *********************")
+
+                    save_flag[cam_index - 1] = True
+                        
+                else:
+                    print(f'************************カメラ{cam_index}  待機時間  *******************************')
+
+
+
+    if save_flag[cam_index - 1]:
+        prev_time[cam_index - 1] = time.time()
+        save_flag[cam_index - 1] = False
                     
     return annotated_frame
 
 def generate_frames_yolo():
+    global frame_count
+    global skip_frame
+
     print('**************** read model *******************')
     model1 = YOLO("yolov8n.pt")
     model2 = YOLO("yolov8n.pt")
     print('**************** capture video *******************')
-    camera1 = cv2.VideoCapture(0)
-    camera2 = cv2.VideoCapture(1)
+    # PCカメラ
+    #camera1 = cv2.VideoCapture(0)
+    #camera2 = cv2.VideoCapture(1)
     
-    #camera1 = cv2.VideoCapture('D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/resource/test_two_people1.mp4')
-    #camera2 = cv2.VideoCapture('D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/resource/test_two_people2.mp4')
+    # ライブカメラ
+    camera1 = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-window')
+    camera2 = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-desk')
+
+    # テストビデオ
+    #camera1 = cv2.VideoCapture("D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/git/ito_branch/mogi-b08/umb_3.mp4")
+    #camera2 = cv2.VideoCapture("D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/git/ito_branch/mogi-b08/umb_4.mp4")
 
     # youtureid設定
     cap_fps = 30
@@ -167,6 +164,10 @@ def generate_frames_yolo():
     print('**************** inference *******************')
     while True:
         
+        frame_count = frame_count + 1
+        if frame_count % skip_frame != 0:
+            continue
+
         success1, frame1 = camera1.read()
         success2, frame2 = camera2.read()
         if not success1 or not success2:

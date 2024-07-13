@@ -13,7 +13,7 @@ class YoutuReID(object):
         fps=30,
         model_path='person_reid_youtu_2021nov.onnx',
         input_shape=(256, 128),
-        score_th=0.5,
+        score_th=0.25,
         providers=['CPUExecutionProvider'],
     ):
         # 入力サイズ
@@ -90,6 +90,7 @@ class YoutuReID(object):
 
         if max_value < self.score_th:
             # スコア閾値以下であれば特徴ベクトルリストに追加
+            print(f'***********未発見************** {max_value} < {self.score_th} ***********************')
             if cam_id not in self.cam_ids and cam_id not in self.except_ids:
                 self.feature_vectors = np.vstack([
                     self.feature_vectors,
@@ -102,6 +103,7 @@ class YoutuReID(object):
         else:
             # スコア閾値以上であればトラッキング情報を返す
             # ここでカメラidが違うときにカメラ間id紐づけ
+            print(f'*********発見**************** {max_value} > {self.score_th} ***********************')
             if track_id.split('-')[0] != cam_id.split('-')[0]:
                 self.except_ids.append(cam_id)
             

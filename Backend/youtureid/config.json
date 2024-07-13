@@ -1,5 +1,5 @@
 {
     "model_path": "youtureid/model/person_reid_youtu_2021nov.onnx",
     "input_shape": "256, 128",
-    "score_th": 0.5
+    "score_th": 0.6
 }
