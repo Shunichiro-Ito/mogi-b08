@@ -40,18 +40,6 @@
       </video>
     -->
     </div>
-    <div class="grid-item">
-      <video controls autoplay>
-        <source src={videoUrls[1]} type="application/x-mpegURL">
-        Your browser does not support the video tag.
-      </video>
-    </div>
-    <div class="grid-item">
-      <video controls autoplay>
-        <source src={videoUrls[2]} type="application/x-mpegURL">
-        Your browser does not support the video tag.
-      </video>
-    </div>
     <div class="grid-item json-display">
       <pre>{JSON.stringify(jsonData, null, 2)}</pre>
     </div>
