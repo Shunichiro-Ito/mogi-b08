@@ -130,7 +130,7 @@ def process_frame(frame, model, cam_index, tracker):
         prev_time[cam_index - 1] = time.time()
         save_flag[cam_index - 1] = False
                     
-    return annotated_frame
+    return frame_plot
 
 def generate_frames_yolo():
     global frame_count
