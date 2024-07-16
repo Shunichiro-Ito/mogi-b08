@@ -10,18 +10,24 @@ def alarm():
 
 def serve():
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))
     s.listen(1)
     conn, addr = s.accept()
     with conn:
       print('Connected by', addr)
 
-      msg = conn.recv(1024).decode('utf-8').rstrip()
-      print(msg)
+      data = conn.recv(1024)
+      while len(data) > 0:
+        msg = data.decode('utf-8').rstrip()
+        print(f'Received: {msg}')
 
-      if msg == 'play alarm now':
-        alarm()
+        if msg == 'play alarm now':
+          alarm()
 
+        data = conn.recv(1024)
+
+      print('Connection lost')
       s.close()
 
 
