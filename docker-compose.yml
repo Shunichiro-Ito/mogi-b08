@@ -1,0 +1,12 @@
+services:
+  blueback:
+    build: ./blueback/FastAPI
+
+  nginx:
+    build: ./BNF
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - blueback
