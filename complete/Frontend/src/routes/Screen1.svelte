@@ -1,6 +1,8 @@
 <script>
     import { onMount } from "svelte";
 
+    const BASE_URL = 'http://localhost:8000'
+
     // 表示データ読み込み
     let videoElement;
 
@@ -26,7 +28,7 @@
     /******************** Streaming  *******************************/
     function startStream() {
         const img = document.createElement("img");
-        img.src = "http://localhost:8000/video_feed_yolo";
+        img.src = BASE_URL + "/video_feed_yolo";
         img.alt = "Video Stream";
         img.style.width = "100%";
         img.style.height = "auto";

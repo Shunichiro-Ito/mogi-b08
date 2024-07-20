@@ -1,20 +1,22 @@
 <script>
   import { onMount } from "svelte";
 
+  const BASE_URL = 'http://backend:8000/api'
+
   let violations = [];
   //violationsは最初はonmountでページを開いた瞬間に全データリクエストのクエリが送られ、全データが代入されるが、検索ボックスのボタンクリックイベント
   //で新たにリクエストしてきたデータをviolationsにまた代入すれば、htmlの部分はviolationsだけ書いておけば勝手に変わる
 
   // 全データ取得
   const fetchViolations = async () => {
-    const response = await fetch("http://localhost:8000/violations/");
+    const response = await fetch(BASE_URL + "/violations/");
     violations = await response.json();
     console.log("Violations:", violations); // データをログに出力
   };
 
   // ダミー生成リクエスト
   const generateDummyData = async () => {
-    const response = await fetch("http://localhost:8000/generate_dummy_data/", {
+    const response = await fetch(BASE_URL + "/generate_dummy_data/", {
       method: "POST",
     });
 
@@ -27,7 +29,7 @@
 
   // ダミーデータ削除
   const deleteDummyData = async () => {
-    const response = await fetch("http://localhost:8000/delete_dummy_data/", {
+    const response = await fetch(BASE_URL + "/delete_dummy_data/", {
       method: "DELETE",
     });
 
@@ -39,7 +41,7 @@
   };
 
    //websocket
-   export const ws = new WebSocket("ws://localhost:8000/ws");
+   export const ws = new WebSocket("ws://backend:8000/ws");
   ws.onmessage = (event) => {
     // メッセージ受信時処理(データ表示を行う)
     const message = event.data;
@@ -79,7 +81,7 @@
 
   // 検索ボタンを押したときの関数
   async function search() {
-    const response = await fetch("http://localhost:8000/search", {
+    const response = await fetch(BASE_URL + "/search", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
