@@ -1,12 +1,12 @@
 services:
-  blueback:
-    build: ./blueback/FastAPI
+  backend:
+    build: ./Backend
 
   nginx:
-    build: ./BNF
+    build: ./Frontend
     ports:
       - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - blueback
+      - backend

@@ -3,10 +3,13 @@ RUN apt update && apt upgrade -y
 RUN apt install -y libgl1-mesa-dev
 
 WORKDIR /usr/src/app
-COPY . .
+
+COPY ./torch.requirements.txt requirements.txt .
 
 RUN pip install -r torch.requirements.txt
 RUN pip install -r requirements.txt
+
+COPY . .
 
 EXPOSE 8000
 
