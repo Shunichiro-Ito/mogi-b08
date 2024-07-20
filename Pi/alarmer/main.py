@@ -1,11 +1,12 @@
 import socket
-import playsound
+import os
 
 HOST = '' # all interfaces
 PORT = 58881
 
 def alarm():
-  playsound.playsound('./alarm.mp3')
+  os.system('ffplay -autoexit -nodisp ./alarm.mp3 2>/dev/null')
+
 
 
 def serve():
