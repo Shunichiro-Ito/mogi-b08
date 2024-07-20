@@ -1,86 +1,83 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount } from "svelte";
 
     // 表示データ読み込み
-    let jsonData = {};
-    let videoWin, videoDesk;
+    let videoElement;
 
-    // JSONデータの例
-    onMount(async () => {
-        jsonData = await fetch('https://api.example.com/data')
-            .then(response => response.json())
-            .catch(error => console.error('Error fetching JSON data:', error));
-    });
 
-     /******************** Streaming  *******************************/
-     function startStream() {
-        const imgWindow = document.createElement('img');
-        imgWindow.src = "http://blue-network.eolstudy.com/cam-window";
-        imgWindow.alt = "Video Stream";
-        imgWindow.style.width = "100%";
-        imgWindow.style.height = "auto";
-        videoWin.appendChild(imgWindow);
+    //検知メッセージの表示
+    let message ;
+    let visible = false;
 
-        const imgDesk = document.createElement('img');
-        imgDesk.src = "http://blue-network.eolstudy.com/cam-desk";
-        imgDesk.alt = "Video Stream";
-        imgDesk.style.width = "100%";
-        imgDesk.style.height = "auto";
-        videoDesk.appendChild(imgDesk);
+
+    function DetectionMessage() {
+        message = '違反者検出';
+        visible = true;
+        // 5秒後に非表示にする（例）
+        setTimeout(() => {
+            visible = false;
+        }, 5000);
+    }
+
+
+
+    
+
+    /******************** Streaming  *******************************/
+    function startStream() {
+        const img = document.createElement("img");
+        img.src = "http://localhost:8000/video_feed_yolo";
+        img.alt = "Video Stream";
+        img.style.width = "100%";
+        img.style.height = "auto";
+        videoElement.appendChild(img);
     }
 
     /******************** OnMount *******************************/
     onMount(() => {
-      // ストリーミング受信処理
-      startStream();
+        // ストリーミング受信処理
+        startStream();
     });
 </script>
 
-  <div class="grid-container">
-    <div class="grid-item">
-      <div id="video-win" bind:this={videoWin}></div> <!--とりあえずwebカメラの映像表示-->
-        <!-- <video controls autoplay>
-          <source src={videoUrls[0]} type="application/x-mpegURL">
-          Your browser does not support the video tag.
-        </video> -->
-    </div>
-    <div class="grid-item">
-      <div id="video-desk" bind:this={videoDesk}></div>
-    </div>
-    <div class="grid-item json-display">
-      <pre>{JSON.stringify(jsonData, null, 2)}</pre>
-    </div>
+<h1>リアルタイム違反者情報</h1>
+
+{#if visible}
+  <div class="toast">
+    <p>{message}</p>
   </div>
+{/if}
 
-  <style>
-    .grid-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 10px;
-      padding: 10px;
+<div id="videoContainer" bind:this={videoElement}></div>
+
+<style>
+    h1 {
+        text-align: center;
+        border-bottom: solid 3px;
+        border-left: solid 3px;
+        border-right: solid 3px;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
-    .grid-item {
-      border: 2px solid #ccc;
-      padding: 10px;
-    }
 
-    video {
-      width: 100%;
-      height: auto;
-    }
+    .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    animation: slideIn 0.5s ease-out forwards;
+  }
 
-    .json-display {
-      overflow: auto;
-      background-color: #f5f5f5;
-      padding: 10px;
-      border-radius: 5px;
+  @keyframes slideIn {
+    from {
+      transform: translateY(100%);
     }
-
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-wrap: break-word;
+    to {
+      transform: translateY(0);
     }
-  </style>
+  }
+</style>

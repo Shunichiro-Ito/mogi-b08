@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 # よくわかんないけど必要
 class ViolatorBase(BaseModel):
@@ -7,6 +8,8 @@ class ViolatorBase(BaseModel):
     date: str
     violation: str
     image: bytes
+    last_modified: datetime
+    tracking_id: str
 
 class ViolatorCreate(ViolatorBase):
     pass
