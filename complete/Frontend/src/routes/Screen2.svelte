@@ -1,25 +1,28 @@
 <script>
   import { onMount } from "svelte";
 
+  const BASE_URL = "http://localhost:8000";
+
   let violations = [];
   //violationsは最初はonmountでページを開いた瞬間に全データリクエストのクエリが送られ、全データが代入されるが、検索ボックスのボタンクリックイベント
   //で新たにリクエストしてきたデータをviolationsにまた代入すれば、htmlの部分はviolationsだけ書いておけば勝手に変わる
 
   // 全データ取得
   const fetchViolations = async () => {
-    const response = await fetch("http://localhost:8000/violations/");
+    const response = await fetch(BASE_URL + "/violations/");
     violations = await response.json();
+    //violations.date = formatDateTime(violations.date)
     console.log("Violations:", violations); // データをログに出力
   };
 
   // ダミー生成リクエスト
   const generateDummyData = async () => {
-    const response = await fetch("http://localhost:8000/generate_dummy_data/", {
+    const response = await fetch(BASE_URL + "/generate_dummy_data/", {
       method: "POST",
     });
 
     if (response.ok) {
-      // fetchViolations();
+      fetchViolations();
     } else {
       console.error("Failed to generate dummy data");
     }
@@ -27,59 +30,45 @@
 
   // ダミーデータ削除
   const deleteDummyData = async () => {
-    const response = await fetch("http://localhost:8000/delete_dummy_data/", {
+    const response = await fetch(BASE_URL + "/delete_dummy_data/", {
       method: "DELETE",
     });
 
     if (response.ok) {
-      // fetchViolations();
+      fetchViolations();
     } else {
       console.error("Failed to delete dummy data");
     }
   };
 
-   //websocket
-   export const ws = new WebSocket("ws://localhost:8000/ws");
-  ws.onmessage = (event) => {
-    // メッセージ受信時処理(データ表示を行う)
-    const message = event.data;
-    console.log(message);
-    fetchViolations();
-  };
-
   onMount(() => {
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket closed");
-    };
-
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+    fetchViolations();
   });
 
   //チェックボックスまとめたもの
   let filters = {
     checkBox1: false,
     checkBox2: false,
-    //checkBox3: false,
-    //dateRange: '',
+    checkBox3: false,
+    checkBox4: false,
+    checkBox5: false,
+    checkBox6: false,
+    startDateTime: "",
+    endDateTime: "",
   };
 
   //プルダウン
-  let questions = [
-    { id: 1, text: "question1" },
-    { id: 2, text: "question2" },
-    { id: 3, text: "question3" },
-  ];
-  let selected;
+  let startDate = "";
+  let startTime = "";
+  let endDate = "";
+  let endTime = "";
 
   // 検索ボタンを押したときの関数
   async function search() {
-    const response = await fetch("http://localhost:8000/search", {
+    filters.startDateTime =
+      startDate && startTime ? `${startDate}T${startTime}` : "";
+    filters.endDateTime = endDate && endTime ? `${endDate}T${endTime}` : "";
+    const response = await fetch(BASE_URL + "/search", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +76,18 @@
       body: JSON.stringify(filters),
     });
     violations = await response.json();
+    //violations.date = formatDateTime(violations.date)
   }
+
+  // Tを取り除き、小数点以下を削除する関数
+  //function formatDateTime(dateandtime) {
+  // "T"で分割
+  //let [date, time] = dateandtime.split('T');
+  // 秒の部分の小数点以下を削除
+  //time = time.split('.')[0];
+  //print()
+  //return `${date} ${time}`;
+  //}
 </script>
 
 <h1>違反者データベース</h1>
@@ -98,8 +98,25 @@
 
 <main>
   <div class="kensaku">
+    <h2>条件絞り込み</h2>
+
+    <!--プルダウン-->
+    <p class="attribute">日時</p>
+    <div>
+      <label>From: Date</label>
+      <input type="date" bind:value={startDate} />
+      <label>Time</label>
+      <input type="time" bind:value={startTime} />
+    </div>
+    <div>
+      <label>To: Date</label>
+      <input type="date" bind:value={endDate} />
+      <label>Time</label>
+      <input type="time" bind:value={endTime} />
+    </div>
+
     <!--チェックボックス(カメラ番号)-->
-    <p>カメラ番号</p>
+    <p class="attribute">カメラ番号</p>
     <label>
       <input type="checkbox" bind:checked={filters.checkBox1} />
       カメラ1
@@ -110,33 +127,37 @@
       カメラ2
     </label>
     <br />
+    <label>
+      <input type="checkbox" bind:checked={filters.checkBox3} />
+      カメラ1かつ2
+    </label>
 
     <!--チェックボックス(違反内容)-->
-    <p>違反内容</p>
+    <p class="attribute">違反内容</p>
     <label>
-      <input type="checkbox" />
+      <input type="checkbox" bind:checked={filters.checkBox4} />
       傘さし運転
     </label>
     <br />
-
-    <!--プルダウン-->
-    <p>日時</p>
-    <select bind:value={selected}>
-      {#each questions as question}
-        <option value={question}>
-          {question.text}
-        </option>
-      {/each}
-    </select>
+    <label>
+      <input type="checkbox" bind:checked={filters.checkBox5} />
+      スマホ運転
+    </label>
+    <br />
+    <label>
+      <input type="checkbox" bind:checked={filters.checkBox6} />
+      二人乗り運転
+    </label>
+    <br />
 
     <!--検索ボックス-->
-    <button on:click={search}>検索</button>
+    <button on:click={search} class="retrieve">検索</button>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>日付</th>
+        <th>日時</th>
         <th>カメラ番号</th>
         <th>違反内容</th>
         <th>写真</th>
@@ -167,19 +188,42 @@
     text-align: center;
     font-family: "Noto Serif JP", serif;
     border-bottom: solid 3px;
+    border-left: solid 3px;
+    border-right: solid 3px;
     margin-top: 0;
     margin-bottom: 0;
   }
 
   main {
     text-align: center;
-    margin: 0 auto;
-    max-width: 600px;
+    max-width: 1200px;
     display: flex;
   }
 
+  p {
+    margin: 3%;
+  }
+
+  .attribute {
+    border-bottom: solid;
+    font-weight: bold;
+    margin-top: 5%;
+  }
+
+  .kensaku {
+    width: 30%;
+    margin-right: 10%;
+  }
+
+  .retrieve {
+    width: 50%;
+    margin-top: 10%;
+    background-color: blue;
+    color: #f2f2f2;
+  }
+
   table {
-    width: 100%;
+    width: 90%;
     border-collapse: collapse;
     margin-top: 20px;
   }
@@ -195,7 +239,7 @@
   }
 
   img {
-    max-width: 100%;
+    width: 100%;
     height: auto;
   }
 </style>

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
+from sqlalchemy import or_
 from database import engine, SessionLocal
 import models, schemas
 from fastapi.middleware.cors import CORSMiddleware
@@ -114,8 +115,8 @@ def generate_dummy_data(db: Session = Depends(get_db)):
 
     # テストとして1つだけ追加
     for i in range(1):
-        cam_no = str(random.randint(1, 3))
-        date = '2024-01-01'
+        cam_no = str(random.randint(1, 2))
+        #date = '2024-01-01'
         violation = violations[random.randint(0, 2)]
         tracking_id = 'id1'
         # 適当な画像
@@ -126,7 +127,7 @@ def generate_dummy_data(db: Session = Depends(get_db)):
             image = image_file.read()
             binary_image = base64.b64encode(image)
         
-        db_violation = models.Violator(cam_no=cam_no, date=date, violation=violation, image=binary_image,last_modified=datetime.now(),tracking_id =tracking_id)
+        db_violation = models.Violator(cam_no=cam_no, date=datetime.now(), violation=violation, image=binary_image,last_modified=datetime.now(),tracking_id =tracking_id)
         db.add(db_violation)
         db.commit()
         db.refresh(db_violation)
@@ -185,7 +186,12 @@ async def video_feed_yolo():
 class FilterSchema(BaseModel):
     checkBox1: bool
     checkBox2: bool
-    #checkBox3: bool
+    checkBox3: bool
+    checkBox4: bool
+    checkBox5: bool
+    checkBox6: bool
+    startDateTime: str
+    endDateTime: str
 
 #2ページ目の検索条件付き用
 # フィルタリングエンドポイント
@@ -193,14 +199,58 @@ class FilterSchema(BaseModel):
 def search(filters: FilterSchema, db: Session = Depends(get_db)):
     try:
         query = db.query(Violator)
-        if filters.checkBox1:
+
+        #日時
+        if filters.startDateTime == '':
+            filters.startDateTime = None
+        else:
+            try:
+                filters.startDateTime = datetime.fromisoformat(filters.startDateTime)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid datetime format")
+        
+        if filters.endDateTime == '':
+            filters.endDateTime = None
+        else:
+            try:
+                filters.endDateTime = datetime.fromisoformat(filters.endDateTime)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid datetime format")
+
+        if filters.startDateTime != None and filters.endDateTime != None:
+            query = query.filter(Violator.date >= filters.startDateTime,Violator.date <= filters.endDateTime)
+
+        #カメラ番号
+        if filters.checkBox1 and not filters.checkBox2 and not filters.checkBox3:
             query = query.filter(Violator.cam_no == '1')
-        if filters.checkBox2:
-            query = query.filter(Violator.violation == 1)
-        #if filters.checkBox3:
-         #   query = query.filter(Violator.field3 == True)
-        #if filters.dateRange:
-        #    query = query.filter(Violator.date == filters.dateRange)
+        elif not filters.checkBox1 and filters.checkBox2 and not filters.checkBox3:
+            query = query.filter(Violator.cam_no == '2')
+        elif not filters.checkBox1 and not filters.checkBox2 and filters.checkBox3:
+            query = query.filter(or_(Violator.cam_no == '1,2',Violator.cam_no == '2,1'))
+        elif filters.checkBox1 and filters.checkBox2 and not filters.checkBox3:
+            query = query.filter(or_(Violator.cam_no == '1',Violator.cam_no == '2'))
+        elif filters.checkBox1 and not filters.checkBox2 and filters.checkBox3:
+            query = query.filter(or_(Violator.cam_no == '1',Violator.cam_no == '1,2',Violator.cam_no == '2,1'))
+        elif not filters.checkBox1 and filters.checkBox2 and filters.checkBox3:
+            query = query.filter(or_(Violator.cam_no == '2',Violator.cam_no == '1,2',Violator.cam_no == '2,1'))
+        elif filters.checkBox1 and filters.checkBox2 and filters.checkBox3:
+            query = query.filter(or_(Violator.cam_no == '1',Violator.cam_no == '2',Violator.cam_no == '1,2',Violator.cam_no == '2,1'))
+
+        #違反内容    
+        if filters.checkBox4 and not filters.checkBox5 and not filters.checkBox6:
+            query = query.filter(Violator.violation == '傘差し運転')
+        elif not filters.checkBox4 and filters.checkBox5 and not filters.checkBox6:
+            query = query.filter(Violator.violation == 'スマホ運転')
+        elif not filters.checkBox4 and not filters.checkBox5 and filters.checkBox6:
+            query = query.filter(or_(Violator.violation == '二人乗り'))
+        elif filters.checkBox4 and filters.checkBox5 and not filters.checkBox6:
+            query = query.filter(or_(Violator.violation == '傘差し運転',Violator.violation == 'スマホ運転'))
+        elif filters.checkBox4 and not filters.checkBox5 and filters.checkBox6:
+            query = query.filter(or_(Violator.violation == '傘差し運転',Violator.violation == '二人乗り'))
+        elif not filters.checkBox4 and filters.checkBox5 and filters.checkBox6:
+            query = query.filter(or_(Violator.violation == 'スマホ運転',Violator.violation == '二人乗り'))
+        elif filters.checkBox4 and filters.checkBox5 and filters.checkBox6:
+            query = query.filter(or_(Violator.violation == '傘差し運転',Violator.violation == 'スマホ運転',Violator.violation == '二人乗り'))
         data = query.all()
         return data
     except Exception as e:
