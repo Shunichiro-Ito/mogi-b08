@@ -4,8 +4,8 @@ from datetime import datetime
 
 # よくわかんないけど必要
 class ViolatorBase(BaseModel):
-    cam_no: int
-    date: str
+    cam_no: str
+    date: datetime
     violation: str
     image: bytes
     last_modified: datetime

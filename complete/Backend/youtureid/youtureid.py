@@ -46,7 +46,7 @@ class YoutuReID(object):
 
     def __call__(self, image, box, cam_id):
         image_height, image_width = image.shape[0], image.shape[1]
-
+        print(self.feature_vectors)
         # 人物切り抜き
         # xmin = int(np.clip(box[0], 0, image_width - 1))
         # ymin = int(np.clip(box[1], 0, image_height - 1))

@@ -12,7 +12,7 @@ class Violator(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cam_no = Column(String)
-    date = Column(String)
+    date = Column(DateTime(timezone=True))
     violation = Column(String)
     image = Column(BLOB)
     last_modified = Column(DateTime(timezone=True), onupdate=func.now())  # タイムスタンプ

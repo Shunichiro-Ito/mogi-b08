@@ -18,6 +18,16 @@ tracking_id = 0
 frame_count = 0
 skip_frame = 4
 
+def check_database_num(tracker: MultiObjectTracker):
+    try:
+        db = SessionLocal()
+        count = db.query(models.Violator).count()
+        if count == 0:
+            tracker.tracker.feature_vectors = None
+            
+    finally:
+        db.close()
+
 def reg_database(cam_no, violation_name, image_path, tracking_id):
     try:
         # データベース接続
@@ -31,7 +41,7 @@ def reg_database(cam_no, violation_name, image_path, tracking_id):
             image = image_file.read()
             binary_image = base64.b64encode(image)
         
-        db_violation = models.Violator(cam_no=str(cam_no), date=date, violation=violation, image=binary_image, last_modified=datetime.now(), tracking_id=tracking_id)
+        db_violation = models.Violator(cam_no=str(cam_no), date=now, violation=violation, image=binary_image, last_modified=datetime.now(), tracking_id=tracking_id)
         db.add(db_violation)
         db.commit()
         db.refresh(db_violation)
@@ -75,6 +85,7 @@ def process_frame(frame, model, cam_index, tracker):
     frame_plot = frame
     bike_S = []
     umb_S = []
+    person_S = []
 
     for box in results[0].boxes:
         #傘と自転車の情報を保存
@@ -85,6 +96,9 @@ def process_frame(frame, model, cam_index, tracker):
         elif(results[0].names[class_id]=="umbrella"):
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             umb_S.append([x1,y1,x2,y2])
+        elif(results[0].names[class_id]=="person"):
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            person_S.append([x1,y1,x2,y2])
      
     #傘と自転車が横から見て重なっていたらまとめて描画
     for i in umb_S:
@@ -95,6 +109,10 @@ def process_frame(frame, model, cam_index, tracker):
                 cv2.rectangle(frame_plot, (min(x1,X1), min(y1,Y1)), (max(x2,X2), max(y2,Y2)), (0, 0, 255), 2)
                 cv2.putText(frame_plot, "bike", (min(x1,X1), min(y1,Y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                 if(time.time() - prev_time[cam_index - 1] >= interval):
+                    if len(person_S) == 0:
+                        # 人がいない場合はスキップ
+                        continue
+
                     print(f'*********************カメラ{cam_index}  傘差し運転発見 *******************************')
 
                     # ここが保存処理、つまりカメラ間にて同じ人がいるかを調べたい部分
@@ -148,9 +166,9 @@ def generate_frames_yolo():
     camera1 = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-window')
     camera2 = cv2.VideoCapture('http://blue-network.eolstudy.com/cam-desk')
 
-    # テストビデオ
-    #camera1 = cv2.VideoCapture("D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/git/ito_branch/mogi-b08/umb_3.mp4")
-    #camera2 = cv2.VideoCapture("D:/Research/Social_Infomatics_Lecture/PracticeOfSocialInformatics_2nd/code/git/ito_branch/mogi-b08/umb_4.mp4")
+     #テストビデオ
+    #camera1 = cv2.VideoCapture("/Users/admin/Downloads/video_517517241151914317-Nm8OaLPB.MP4")
+    #camera2 = cv2.VideoCapture("/Users/admin/Downloads/video_517517241151914317-Nm8OaLPB.MP4")
 
     # youtureid設定
     cap_fps = 30
@@ -163,14 +181,14 @@ def generate_frames_yolo():
     
     print('**************** inference *******************')
     while True:
+        success1, frame1 = camera1.read()
+        success2, frame2 = camera2.read()
         
         frame_count = frame_count + 1
         if frame_count % skip_frame != 0:
             continue
         frame_count =0
 
-        success1, frame1 = camera1.read()
-        success2, frame2 = camera2.read()
         if not success1 or not success2:
             break
         frame_left, frame_right = frame1, frame2
@@ -198,6 +216,9 @@ def generate_frames_yolo():
         ret, buffer = cv2.imencode('.jpg', combined_frame)
         if not ret:
             break
+
+        # データベース要素数チェック
+        check_database_num(tracker)
 
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
