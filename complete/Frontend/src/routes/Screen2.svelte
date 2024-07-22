@@ -80,14 +80,15 @@
   }
 
   // Tを取り除き、小数点以下を削除する関数
-  //function formatDateTime(dateandtime) {
-  // "T"で分割
-  //let [date, time] = dateandtime.split('T');
-  // 秒の部分の小数点以下を削除
-  //time = time.split('.')[0];
-  //print()
-  //return `${date} ${time}`;
-  //}
+  function formatDateTime(dateandtime) {
+    dateandtime += 9 * 60 * 1000
+    // "T"で分割
+    let [date, time] = dateandtime.split('T');
+    // 秒の部分の小数点以下を削除
+    time = time.split('.')[0];
+    print()
+    return `${date} ${time}`;
+  }
 </script>
 
 <h1>違反者データベース</h1>
@@ -166,7 +167,7 @@
     <tbody>
       {#each violations as violation}
         <tr>
-          <td>{violation.date}</td>
+          <td>{formatDateTime(violation.date)}</td>
           <td>{violation.cam_no}</td>
           <td>{violation.violation}</td>
           <td>
@@ -239,7 +240,12 @@
   }
 
   img {
-    width: 100%;
-    height: auto;
+    /* width: 100%; */
+    height: 50%;
+  }
+
+  img:hover {
+    width: 80%;
+    height: 100%;
   }
 </style>

@@ -119,6 +119,8 @@
     padding: 10px;
     border-radius: 4px;
     animation: slideIn 0.5s ease-out forwards;
+    width: 15%;
+    text-align: center;
   }
 
   @keyframes slideIn {
