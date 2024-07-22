@@ -11,6 +11,7 @@ import models, schemas
 from tracker import MultiObjectTracker 
 # 時間
 import time
+from alarm import play_alarm
 
 prev_time = [time.time(), time.time()]
 save_flag = [True, True]
@@ -114,6 +115,7 @@ def process_frame(frame, model, cam_index, tracker):
                         continue
 
                     print(f'*********************カメラ{cam_index}  傘差し運転発見 *******************************')
+                    play_alarm(cam_index)
 
                     # ここが保存処理、つまりカメラ間にて同じ人がいるかを調べたい部分
                     xyxy = [min(x1, X1), min(y1, Y1), max(x2, X2), max(y2, Y2)]

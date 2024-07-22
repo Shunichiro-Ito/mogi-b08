@@ -6,6 +6,7 @@ def play_alarm(pi_id: int):
     sock.connect(('localhost', port))
     try:
         sock.sendall(b'play alarm now')
+        print(f'[INFO] [ALARM] alarm played for {['pi-window', 'pi-desk'][pi_id - 1]}')
     finally:
         sock.close()
 
