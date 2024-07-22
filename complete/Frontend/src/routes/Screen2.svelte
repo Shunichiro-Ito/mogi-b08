@@ -86,7 +86,6 @@
     let [date, time] = dateandtime.split('T');
     // 秒の部分の小数点以下を削除
     time = time.split('.')[0];
-    print()
     return `${date} ${time}`;
   }
 </script>
