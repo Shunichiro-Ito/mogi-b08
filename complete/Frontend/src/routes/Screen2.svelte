@@ -81,12 +81,26 @@
 
   // Tを取り除き、小数点以下を削除する関数
   function formatDateTime(dateandtime) {
-    dateandtime += 9 * 60 * 1000
-    // "T"で分割
-    let [date, time] = dateandtime.split('T');
-    // 秒の部分の小数点以下を削除
-    time = time.split('.')[0];
-    return `${date} ${time}`;
+
+    const date = new Date(dateandtime);
+    date.setTime(date.getTime() + 9 * 3600000);
+
+    function pad(number) {
+      if (number < 10) {
+        return '0' + number;
+      }
+      return number;
+    }
+
+    // Format the date in local time
+    const localDateString = date
+      .getFullYear() + '-' +
+      pad(date.getMonth() + 1) + '-' +
+      pad(date.getDate()) + ' ' +
+      pad(date.getHours()) + ':' +
+      pad(date.getMinutes()) + ':' +
+      pad(date.getSeconds());
+    return localDateString
   }
 </script>
 
