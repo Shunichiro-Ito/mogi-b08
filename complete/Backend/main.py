@@ -128,13 +128,8 @@ def generate_dummy_data(db: Session = Depends(get_db)):
         with open(image_path, "rb") as image_file:
             image = image_file.read()
             binary_image = base64.b64encode(image)
-<<<<<<< HEAD
-
-        db_violation = models.Violator(cam_no=cam_no, date=date, violation=violation, image=binary_image,last_modified=datetime.now(),tracking_id =tracking_id)
-=======
         
         db_violation = models.Violator(cam_no=cam_no, date=datetime.now(), violation=violation, image=binary_image,last_modified=datetime.now(),tracking_id =tracking_id)
->>>>>>> d0d5510 (final commit)
         db.add(db_violation)
         db.commit()
         db.refresh(db_violation)
