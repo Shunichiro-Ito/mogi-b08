@@ -14,7 +14,7 @@
     // 5秒後に非表示にする（例）
     setTimeout(() => {
       visible = false;
-    }, 5000);
+    }, 9000);
   }
 
   /******************** Websocket  *******************************/
@@ -119,6 +119,8 @@
     padding: 10px;
     border-radius: 4px;
     animation: slideIn 0.5s ease-out forwards;
+    width:15%;
+    text-align: center;
   }
 
   @keyframes slideIn {

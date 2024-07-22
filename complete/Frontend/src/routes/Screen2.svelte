@@ -1,5 +1,7 @@
 <script>
   import { onMount } from "svelte";
+  //import { format } from 'date-fns';
+  //import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
 
   const BASE_URL = "http://localhost:8000";
 
@@ -11,7 +13,7 @@
   const fetchViolations = async () => {
     const response = await fetch(BASE_URL + "/violations/");
     violations = await response.json();
-    //violations.date = formatDateTime(violations.date)
+    //datest  = formatDateTime(violations.date)
     console.log("Violations:", violations); // データをログに出力
   };
 
@@ -63,6 +65,7 @@
   let endDate = "";
   let endTime = "";
 
+  let datest = "";
   // 検索ボタンを押したときの関数
   async function search() {
     filters.startDateTime =
@@ -76,18 +79,22 @@
       body: JSON.stringify(filters),
     });
     violations = await response.json();
-    //violations.date = formatDateTime(violations.date)
+    //datest  = formatDateTime(violations.date)
   }
 
+  //const timezone = 'Asia/Tokyo';
+  // UTC時間を日本時間に変換
+  //const jstDate = utcToZonedTime(violations.date, timezone);
+
   // Tを取り除き、小数点以下を削除する関数
-  //function formatDateTime(dateandtime) {
-  // "T"で分割
-  //let [date, time] = dateandtime.split('T');
+  function formatDateTime(dateandtime) {
+   //"T"で分割
+   dateandtime = dateandtime + 9 * 60 * 1000
+  let [date, time] = dateandtime.split('T');
   // 秒の部分の小数点以下を削除
-  //time = time.split('.')[0];
-  //print()
-  //return `${date} ${time}`;
-  //}
+  time = time.split('.')[0];
+  return `${date} ${time}`;
+  }
 </script>
 
 <h1>違反者データベース</h1>
@@ -166,7 +173,7 @@
     <tbody>
       {#each violations as violation}
         <tr>
-          <td>{violation.date}</td>
+          <td>{formatDateTime(violation.date)}</td>
           <td>{violation.cam_no}</td>
           <td>{violation.violation}</td>
           <td>
@@ -239,7 +246,12 @@
   }
 
   img {
-    width: 100%;
-    height: auto;
+    /*width: 100%;*/
+    height: 50%;
+  }
+
+  img:hover {
+    width: 80%;
+    height:100%;
   }
 </style>
