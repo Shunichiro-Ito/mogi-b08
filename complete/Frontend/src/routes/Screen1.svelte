@@ -29,7 +29,7 @@
   /******************** Streaming  *******************************/
   function startStream() {
     const img = document.createElement("img");
-    img.src = "http://localhost:8000/video_feed_yolo";
+    img.src = "http://backend:8000/api/video_feed_yolo";
     img.alt = "Video Stream";
     img.style.width = "100%";
     img.style.height = "auto";
@@ -41,7 +41,7 @@
     // ストリーミング受信処理
     startStream();
 
-    const ws = new WebSocket("ws://localhost:8000/ws");
+    const ws = new WebSocket("ws://backend:8000/api/ws");
     ws.onmessage = (event) => {
       // メッセージ受信時処理(データ表示を行う)
       const message = event.data;

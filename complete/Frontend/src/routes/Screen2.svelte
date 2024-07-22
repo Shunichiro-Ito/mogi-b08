@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
 
-  const BASE_URL = "http://localhost:8000";
+  const BASE_URL = "http://backend:8000/api";
 
   let violations = [];
   //violationsは最初はonmountでページを開いた瞬間に全データリクエストのクエリが送られ、全データが代入されるが、検索ボックスのボタンクリックイベント
