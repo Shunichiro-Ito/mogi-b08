@@ -1,6 +1,8 @@
 services:
   backend:
     build: ./Backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   nginx:
     build: ./Frontend
