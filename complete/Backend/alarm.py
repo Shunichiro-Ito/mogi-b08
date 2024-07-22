@@ -7,6 +7,8 @@ def play_alarm(pi_id: int):
     try:
         sock.sendall(b'play alarm now')
         print(f"[INFO] [ALARM] alarm played for {['pi-window', 'pi-desk'][pi_id - 1]}")
+    except e:
+        print(e)
     finally:
         sock.close()
 

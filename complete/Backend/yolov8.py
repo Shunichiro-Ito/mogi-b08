@@ -183,8 +183,8 @@ def generate_frames_yolo():
     
     print('**************** inference *******************')
 
-    fps = 3.0
-    interval = 1 / fps
+    fps = 12.0
+    interval = 1.0 / fps
     
     while True:
         start_time = time.time()
