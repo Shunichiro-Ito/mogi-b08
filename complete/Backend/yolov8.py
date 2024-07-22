@@ -182,10 +182,18 @@ def generate_frames_yolo():
         )
     
     print('**************** inference *******************')
+
+    fps = 3.0
+    interval = 1 / fps
+    
     while True:
+        start_time = time.time()
+
         success1, frame1 = camera1.read()
         success2, frame2 = camera2.read()
         
+
+
         frame_count = frame_count + 1
         if frame_count % skip_frame != 0:
             continue
@@ -223,6 +231,11 @@ def generate_frames_yolo():
         check_database_num(tracker)
 
         frame_bytes = buffer.tobytes()
+
+        elapsed_time = time.time() - start_time
+        wait_time = max(0, interval - elapsed_time)
+        time.sleep(wait_time)
+
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
     
