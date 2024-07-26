@@ -1,0 +1,11 @@
+[Unit]
+Description=Motion using libcamerify
+After=network.target
+
+[Service]
+User=root
+ExecStart=libcamerify motion
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=AutoSSH tunnel service for Remote Port Forwarding
+After=network.target
+
+[Service]
+User=pi
+Environment="AUTOSSH_GATETIME=0"
+ExecStart=/usr/bin/autossh -M 0 -N -T -R 58882:localhost:58881 admin@blue-network.eolstudy.com -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -o "ExitOnForwardFailure yes"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

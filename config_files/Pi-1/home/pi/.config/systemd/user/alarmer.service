@@ -1,0 +1,14 @@
+[Unit]
+Description=Pi Alarmer
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /home/pi/mogi-b08/Pi/alarmer/main.py
+WorkingDirectory=/home/pi/mogi-b08/Pi/alarmer
+Restart=on-failure
+RestartSec=5s
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
